@@ -1,3 +1,6 @@
 from django.contrib import admin
 
-# Register your models here.
+from keja_user.models import Contact, KejaUser
+
+admin.site.register(KejaUser)
+admin.site.register(Contact)
