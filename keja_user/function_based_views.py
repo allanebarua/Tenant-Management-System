@@ -7,13 +7,7 @@ from rest_framework.response import Response
 from keja_user.authentication import KejaPasswordAuthentication
 from keja_user.models import LANDLORD, Contact, KejaUser
 from keja_user.serializers import ContactSerializer, KejaUserSerializer
-
-
-def get_db_object(model, pk):
-    try:
-        return model.objects.get(id=pk)
-    except model.DoesNotExist:
-        raise exceptions.NotFound(f'{model.__name__} with id {pk} not found')
+from keja_user.utils import get_db_object
 
 
 @api_view(['GET'])

@@ -2,12 +2,11 @@ import base64
 from collections import OrderedDict
 from unittest.mock import patch
 
-import pytest
-from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 from model_bakery import baker
 from rest_framework import HTTP_HEADER_ENCODING, status
+from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
 from keja_user.models import ADMIN, LANDLORD, PHONE_CONTACT, KejaUser
@@ -19,17 +18,21 @@ def create_db_user(user_type):
     )
 
 
-def add_auth_credentials(client, username, password):
-    credentials = f'{username}:{password}'
-    base64_credentials = base64.b64encode(
-        credentials.encode(HTTP_HEADER_ENCODING)).decode(HTTP_HEADER_ENCODING)
-    
-    client.credentials(HTTP_AUTHORIZATION=f'Basic {base64_credentials}')
+def add_auth_credentials(client, username, password=None, auth_mode='PASSWORD'):
+    if auth_mode == 'PASSWORD':
+        credentials = f'{username}:{password}'
+        base64_credentials = base64.b64encode(
+            credentials.encode(HTTP_HEADER_ENCODING)).decode(HTTP_HEADER_ENCODING)
+
+        client.credentials(HTTP_AUTHORIZATION=f'Basic {base64_credentials}')
+
+    elif auth_mode == 'TOKEN':
+        token =Token.objects.get(user__username=username)
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {token.key}')
+
     return client
 
 
-@pytest.mark.django_db
-@override_settings(ALLOWED_HOSTS=['testserver'])
 class KejaUserTests(APITestCase):
     """Test user management APIs."""
 
@@ -40,7 +43,7 @@ class KejaUserTests(APITestCase):
         timezone_mock.now.return_value = dt
 
         admin = create_db_user(ADMIN)
-        self.client = add_auth_credentials(self.client, admin.username, '123')
+        self.client = add_auth_credentials(self.client, admin, '123')
         user_data = {
             'username': 'Landlord1',
             'password': '123',
@@ -53,7 +56,8 @@ class KejaUserTests(APITestCase):
         self.assertEqual(user_response.status_code, status.HTTP_201_CREATED)
 
         # Create Landlord's contact
-        self.client = add_auth_credentials(self.client, 'Landlord1', '123')
+        landlord = KejaUser.objects.get(username='Landlord1')
+        self.client = add_auth_credentials(self.client, landlord, '123')
         contact_data = {
             'contact_type': PHONE_CONTACT,
             'contact_value': '0790830848',
@@ -82,6 +86,45 @@ class KejaUserTests(APITestCase):
                         ('contact_value', '+254790830848')
                     ])
                 ])
+            ])
+        ]
+        get_response = self.client.get(reverse('list-users'))
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(get_response.data, expected_data)
+
+
+class KejaUserClassBasedViewTests(APITestCase):
+    @patch('keja_user.models.timezone')
+    def test_token_based_authentication(self, timezone_mock):
+        """Admin access to the API using token based authentication."""
+        dt = timezone.now()
+        timezone_mock.now.return_value = dt
+
+        admin = create_db_user(ADMIN)
+
+        # Unauthenticated request.
+        get_response = self.client.get(reverse('list-users'))
+        self.assertEqual(get_response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Password authenticated request
+        self.client = add_auth_credentials(self.client, admin.username, '123', auth_mode='PASSWORD')
+        get_response = self.client.get(reverse('list-users'))
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+
+        # Token authenticated request
+        self.client = add_auth_credentials(self.client, admin.username, auth_mode='TOKEN')
+        expected_data = [
+            OrderedDict([
+                ('id', admin.pk),
+                ('username', admin.username),
+                ('first_name', ''),
+                ('last_name', ''),
+                ('email', ''),
+                ('is_active', True),
+                ('user_type', 'ADMIN'),
+                ('landlord', None),
+                ('created', dt.date().isoformat()),
+                ('user_contacts', [])
             ])
         ]
         get_response = self.client.get(reverse('list-users'))

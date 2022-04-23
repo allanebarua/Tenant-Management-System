@@ -24,3 +24,9 @@ class KejaPasswordAuthentication(authentication.BasicAuthentication):
             raise exceptions.AuthenticationFailed('Invalid username/password.')
 
         return (user, None)
+
+
+class KejaTokenAuthentication(authentication.TokenAuthentication):
+    """Authenticate using a token."""
+
+    keyword = 'Bearer'

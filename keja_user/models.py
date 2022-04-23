@@ -1,11 +1,13 @@
 import bcrypt
 import phonenumbers
-
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import validate_email
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.forms import ValidationError
 from django.utils import timezone
+from rest_framework.authtoken.models import Token
 
 from common.models import KejaBase
 
@@ -28,7 +30,7 @@ CONTACT_TYPES = (
 )
 
 
-class KejaUser(KejaBase, User):
+class KejaUser(KejaBase, AbstractUser):
     """Store for system users."""
 
     dob = models.DateField(null=True, blank=True)
@@ -90,3 +92,10 @@ class Contact(KejaBase):
     def validate_email(self):
         if self.contact_type == EMAIL_CONTACT:
             validate_email(self.contact_value)
+
+
+@receiver(post_save, sender=KejaUser)
+def create_auth_token(sender, instance, created=False, **kwargs):
+    """Create an authentication token for new users."""
+    if created:
+        Token.objects.get_or_create(user=instance)
