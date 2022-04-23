@@ -50,7 +50,7 @@ class KejaUserTests(APITestCase):
 
         # Create Landlord
         user_response = self.client.post(reverse('create-user'), user_data, format='json')
-        self.assertEquals(user_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(user_response.status_code, status.HTTP_201_CREATED)
 
         # Create Landlord's contact
         self.client = add_auth_credentials(self.client, 'Landlord1', '123')
@@ -60,7 +60,7 @@ class KejaUserTests(APITestCase):
             'is_active': True
         }
         contact_response = self.client.post(reverse('create-contact'), contact_data, format='json')
-        self.assertEquals(contact_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(contact_response.status_code, status.HTTP_201_CREATED)
 
         # Get the created user data.
         # Landlords can only query data about themselves and their tenants.
@@ -85,5 +85,5 @@ class KejaUserTests(APITestCase):
             ])
         ]
         get_response = self.client.get(reverse('list-users'))
-        self.assertEquals(get_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
         self.assertEqual(get_response.data, expected_data)
