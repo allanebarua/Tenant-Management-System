@@ -64,7 +64,7 @@ def delete_keja_user(request, pk):
     """
     user = get_db_object(KejaUser, pk)
     user.delete()
-    return Response('User %s has been deleted' % pk)
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['GET'])

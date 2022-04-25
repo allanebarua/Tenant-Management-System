@@ -47,7 +47,7 @@ class KejaUserView(APIView):
     def delete(self, request, *args, **kwargs):
         user = get_db_object(KejaUser, kwargs['pk'])
         user.delete()
-        return Response('User %s has been deleted' % kwargs['pk'])
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ContactView(APIView):
