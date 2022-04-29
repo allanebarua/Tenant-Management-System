@@ -1,3 +1,4 @@
+import stat
 from django.db.models import Q
 from rest_framework import exceptions, permissions, status
 from rest_framework.decorators import (
@@ -5,23 +6,43 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 
 from keja_user.authentication import KejaPasswordAuthentication
+from keja_user.filters import ContactFilter, KejaUserFilter
 from keja_user.models import LANDLORD, Contact, KejaUser
 from keja_user.serializers import ContactSerializer, KejaUserSerializer
 from keja_user.utils import get_db_object
+from rest_framework import status
+
+
+def get_queryset(request, manager, filter_class):
+    """Filter the default queryset using the `filter_class`"""
+    kwargs = {
+        'data': request.query_params,
+        'request': request,
+        'queryset': manager.all()
+    }
+    filterset = filter_class(**kwargs)
+
+    if not filterset.is_valid():
+        raise exceptions.APIException(
+            filterset.errors, code=status.HTTP_400_BAD_REQUEST)
+
+    return filterset.qs
 
 
 @api_view(['GET'])
 @authentication_classes([KejaPasswordAuthentication])
 @permission_classes([permissions.IsAuthenticated])
 def list_keja_users(request, pk=None):
+    queryset = get_queryset(request, KejaUser.objects, KejaUserFilter)
     extras = Q(id=pk) if pk else Q()
+
     if request.user.is_staff:
-        queryset = KejaUser.objects.filter(extras)
+        queryset = queryset.filter(extras)
     elif request.user.user_type == LANDLORD:
-        queryset = KejaUser.objects.filter(
+        queryset = queryset.filter(
             extras, Q(landlord=request.user) | Q(id=request.user.id))
     else:
-        queryset = KejaUser.objects.filter(extras, id=request.user.id)
+        queryset = queryset.filter(extras, id=request.user.id)
 
     serialized_users = KejaUserSerializer(queryset, many=True)
     return Response(serialized_users.data)
@@ -69,19 +90,20 @@ def delete_keja_user(request, pk):
 
 @api_view(['GET'])
 def get_user_contacts(request, pk=None):
+    queryset = get_queryset(request, Contact.objects, ContactFilter)
     extras = Q(user__id=pk) if pk else Q()
     # An admin can get all contacts
     if request.user.is_staff is True:
-        queryset = Contact.objects.filter(extras)
+        queryset = queryset.filter(extras)
 
     # Landlords can get their contacts + contacts for their tenants
     elif request.user.user_type == LANDLORD:
-        queryset = Contact.objects.filter(
+        queryset = queryset.filter(
             extras, Q(owner=request.user) | Q(owner=request.user.landlord))
 
     # Tenants can get their own contacts.
     else:
-        queryset = Contact.objects.filter(extras, owner=request.user)
+        queryset = queryset.filter(extras, owner=request.user)
 
     serialized_contacts = ContactSerializer(queryset, many=True)
     return Response(serialized_contacts.data)

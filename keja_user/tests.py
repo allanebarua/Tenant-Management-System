@@ -83,14 +83,15 @@ class KejaUserTests(APITestCase):
                     OrderedDict([
                         ('owner', 'Landlord1'),
                         ('contact_type', 'PHONE'),
-                        ('contact_value', '+254790830848')
+                        ('contact_value', '+254790830848'),
+                        ('is_active', True)
                     ])
                 ])
             ])
         ]
-        get_response = self.client.get(reverse('list-users'))
-        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(get_response.data, expected_data)
+        response = self.client.get(reverse('list-users'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_data)
 
 
 class KejaUserClassBasedViewTests(APITestCase):
@@ -103,13 +104,13 @@ class KejaUserClassBasedViewTests(APITestCase):
         admin = create_db_user(ADMIN)
 
         # Unauthenticated request.
-        get_response = self.client.get(reverse('list-users'))
-        self.assertEqual(get_response.status_code, status.HTTP_401_UNAUTHORIZED)
+        response = self.client.get(reverse('list-users'))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
         # Password authenticated request
         self.client = add_auth_credentials(self.client, admin.username, '123', auth_mode='PASSWORD')
-        get_response = self.client.get(reverse('list-users'))
-        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+        response = self.client.get(reverse('list-users'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # Token authenticated request
         self.client = add_auth_credentials(self.client, admin.username, auth_mode='TOKEN')
@@ -127,6 +128,6 @@ class KejaUserClassBasedViewTests(APITestCase):
                 ('user_contacts', [])
             ])
         ]
-        get_response = self.client.get(reverse('list-users'))
-        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(get_response.data, expected_data)
+        response = self.client.get(reverse('list-users'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_data)

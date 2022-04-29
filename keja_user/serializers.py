@@ -8,7 +8,7 @@ class ContactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contact
-        fields = ('owner', 'contact_type', 'contact_value')
+        fields = ('owner', 'contact_type', 'contact_value', 'is_active')
 
     def create(self, validated_data):
         return Contact.objects.create(**validated_data)

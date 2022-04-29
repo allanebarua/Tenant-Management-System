@@ -3,26 +3,51 @@ from rest_framework import exceptions, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from keja_user.authentication import KejaTokenAuthentication, KejaPasswordAuthentication
+from keja_user.authentication import (
+    KejaPasswordAuthentication, KejaTokenAuthentication)
+from keja_user.filters import ContactFilter, KejaUserFilter
 from keja_user.models import LANDLORD, Contact, KejaUser
 from keja_user.serializers import ContactSerializer, KejaUserSerializer
 from keja_user.utils import get_db_object
 
 
-class KejaUserView(APIView):
+class KejaAPIView(APIView):
+    """Allow custom filtering of objects using django-filters."""
+
+    def get_queryset(self, request):
+        kwargs = {
+            'data': request.query_params,
+            'request': request,
+            'queryset': self.queryset
+        }
+        filterset = self.filter_class(**kwargs)
+
+        if not filterset.is_valid():
+            raise exceptions.APIException(
+                filterset.errors, code=status.HTTP_400_BAD_REQUEST)
+
+        return filterset.qs
+
+
+class KejaUserView(KejaAPIView):
     """Class view for user management."""
+
     authentication_classes = [KejaTokenAuthentication, KejaPasswordAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+    queryset = KejaUser.objects.all()
+    filter_class = KejaUserFilter
 
     def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset(request)
+
         extras = Q(id=kwargs['pk']) if kwargs.get('pk') else Q()
         if request.user.is_staff:
-            queryset = KejaUser.objects.filter(extras)
+            queryset = queryset.filter(extras)
         elif request.user.user_type == LANDLORD:
-            queryset = KejaUser.objects.filter(
+            queryset = queryset.filter(
                 extras, Q(landlord=request.user) | Q(id=request.user.id))
         else:
-            queryset = KejaUser.objects.filter(extras, id=request.user.id)
+            queryset = queryset.filter(extras, id=request.user.id)
 
         serialized_users = KejaUserSerializer(queryset, many=True)
         return Response(serialized_users.data)
@@ -50,21 +75,25 @@ class KejaUserView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ContactView(APIView):
+class ContactView(KejaAPIView):
     """Class based view for contacts management."""
+    queryset = Contact.objects.all()
+    filter_class = ContactFilter
 
     def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset(request)
+
         extras = Q(user__id=kwargs['pk']) if kwargs.get('pk') else Q()
 
         if request.user.is_staff is True:
-            queryset = Contact.objects.filter(extras)
+            queryset = queryset.filter(extras)
 
         elif request.user.user_type == LANDLORD:
-            queryset = Contact.objects.filter(
+            queryset = queryset.filter(
                 extras, Q(owner=request.user) | Q(owner=request.user.landlord))
 
         else:
-            queryset = Contact.objects.filter(extras, owner=request.user)
+            queryset = queryset.filter(extras, owner=request.user)
 
         serialized_contacts = ContactSerializer(queryset, many=True)
         return Response(serialized_contacts.data)

@@ -4,9 +4,9 @@ from keja_user import class_based_views, function_based_views, generic_views
 
 KEJA_USER_VIEW = class_based_views.KejaUserView.as_view()
 CONTACT_VIEW = class_based_views.ContactView.as_view()
-
 GENERIC_USER_VIEW = generic_views.KejaUserView.as_view()
 
+# Function-Based Views
 """
 urlpatterns = [
     path('', function_based_views.list_keja_users, name='list-users'),
@@ -19,7 +19,8 @@ urlpatterns = [
 ]
 """
 
-"""
+# Class-Based views (APIView)
+
 urlpatterns = [
     path('', KEJA_USER_VIEW, name='list-users'),
     path('<int:pk>', KEJA_USER_VIEW, name='list-user'),
@@ -29,8 +30,10 @@ urlpatterns = [
     path('create_contact/', CONTACT_VIEW, name='create-contact'),
     path('list_contacts', CONTACT_VIEW, name='list-contacts'),
 ]
-"""
 
+
+# Generic views (generics)
+"""
 urlpatterns = [
     path('', GENERIC_USER_VIEW, name='list-users'),
     path('<int:pk>', GENERIC_USER_VIEW, name='list-user'),
@@ -40,3 +43,4 @@ urlpatterns = [
     path('create_contact/', CONTACT_VIEW, name='create-contact'),
     path('list_contacts', CONTACT_VIEW, name='list-contacts'),
 ]
+"""

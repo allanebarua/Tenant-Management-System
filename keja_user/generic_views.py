@@ -1,10 +1,10 @@
 from django.db.models import Q
 from rest_framework import exceptions, generics
 from rest_framework.response import Response
+from keja_user.filters import KejaUserFilter
 
 from keja_user.models import LANDLORD, TENANT, KejaUser
 from keja_user.serializers import KejaUserSerializer
-
 
 class KejaUserView(
         generics.ListCreateAPIView,
@@ -12,6 +12,7 @@ class KejaUserView(
 
     queryset = KejaUser.objects.all()
     serializer_class = KejaUserSerializer
+    filter_class = KejaUserFilter
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -39,6 +40,10 @@ class KejaUserView(
         serializer.save(owner=self.request.user)
 
     def update(self, request, *args, **kwargs):
+        """Update an existing database object.
+
+        Can be used for both update and partial updates.
+        """
         user = self.get_object()
         if not request.user.is_staff and user != request.user:
             raise exceptions.PermissionDenied(
@@ -51,6 +56,7 @@ class KejaUserView(
         return Response(serializer.data)
 
     def check_object_permissions(self, request, obj):
+        """Check Whether the user is allowed to access the database object."""
         permitted = (
             request.user.is_staff
             or request.user == obj
@@ -60,3 +66,7 @@ class KejaUserView(
         if not permitted:
             raise exceptions.PermissionDenied(
                 f'user {request.user.id} cannot retrive user {obj.id}')
+
+    def get_queryset(self):
+        """Get filtered queryset."""
+        return self.filter_queryset(super().get_queryset())
