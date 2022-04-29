@@ -1,5 +1,5 @@
-import stat
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from rest_framework import exceptions, permissions, status
 from rest_framework.decorators import (
     api_view, authentication_classes, permission_classes)
@@ -9,8 +9,6 @@ from keja.keja_user.authentication import KejaPasswordAuthentication
 from keja.keja_user.filters import ContactFilter, KejaUserFilter
 from keja.keja_user.models import LANDLORD, Contact, KejaUser
 from keja.keja_user.serializers import ContactSerializer, KejaUserSerializer
-from django.shortcuts import get_object_or_404
-from rest_framework import status
 
 
 def get_queryset(request, manager, filter_class):

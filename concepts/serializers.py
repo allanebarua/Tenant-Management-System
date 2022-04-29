@@ -26,7 +26,7 @@ class Person:
 
         if serialized_person.is_valid():
             return True
-        
+
         return serialized_person.errors
 
     def convert_to_json(self):
@@ -52,7 +52,7 @@ class PersonSerializer(serializers.Serializer):
         instance.gender = validated_data.get('gender', instance.gender)
         instance.email = validated_data.get('email', instance.email)
         return instance
-    
+
     def validate_gender(self, value):
         """Individual field validation."""
         if value not in ['MALE', 'FEMALE']:
@@ -66,5 +66,3 @@ class PersonSerializer(serializers.Serializer):
             raise serializers.ValidationError({'non_field_errors': 'Impossible'})
 
         return data
-
-{"username": "allan", "user_type": "LANDLORD"}

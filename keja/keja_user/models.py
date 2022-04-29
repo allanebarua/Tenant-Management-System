@@ -36,7 +36,8 @@ class KejaUser(KejaBase, AbstractUser):
     dob = models.DateField(null=True, blank=True)
     national_id_no = models.IntegerField(null=True, blank=True, unique=True)
     user_type = models.CharField(max_length=20, choices=USER_TYPES)
-    landlord = models.OneToOneField('KejaUser', null=True, blank=True, on_delete=models.CASCADE)
+    landlord = models.OneToOneField(
+        'KejaUser', null=True, blank=True, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         if self.user_type in [LANDLORD, ADMIN]:
@@ -63,7 +64,8 @@ class KejaUser(KejaBase, AbstractUser):
 
 class Contact(KejaBase):
     """Store for user contacts."""
-    owner = models.ForeignKey(KejaUser, related_name='user_contacts', on_delete=models.CASCADE)
+    owner = models.ForeignKey(
+        KejaUser, related_name='user_contacts', on_delete=models.CASCADE)
     contact_type = models.CharField(max_length=20, choices=CONTACT_TYPES)
     contact_value = models.CharField(max_length=256)
     is_active = models.BooleanField(default=False)

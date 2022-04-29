@@ -3,8 +3,9 @@ from rest_framework import exceptions, generics
 from rest_framework.response import Response
 from keja.keja_user.filters import KejaUserFilter
 
-from keja.keja_user.models import LANDLORD, TENANT, KejaUser
+from keja.keja_user.models import LANDLORD, KejaUser
 from keja.keja_user.serializers import KejaUserSerializer
+
 
 class KejaUserView(
         generics.ListCreateAPIView,

@@ -15,6 +15,5 @@ class KejaBase(models.Model):
 
         super().save(*args, **kwargs)
 
-
     class Meta():
         abstract = True

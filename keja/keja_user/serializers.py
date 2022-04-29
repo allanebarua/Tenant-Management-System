@@ -23,7 +23,8 @@ class KejaUserSerializer(serializers.ModelSerializer):
     user_contacts = ContactSerializer(many=True, read_only=True)
     password = serializers.CharField(write_only=True)
     created = serializers.DateTimeField(read_only=True, format='%Y-%m-%d')
-    landlord = serializers.SlugRelatedField(slug_field='username', read_only=True, allow_null=True)
+    landlord = serializers.SlugRelatedField(
+        slug_field='username', read_only=True, allow_null=True)
 
     class Meta:
         model = KejaUser

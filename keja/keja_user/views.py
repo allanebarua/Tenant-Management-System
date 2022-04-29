@@ -53,7 +53,8 @@ class KejaUserView(KejaAPIView):
         return Response(serialized_users.data)
 
     def post(self, request, *args, **kwargs):
-        serializer_data = KejaUserSerializer(data=request.data, context={'request': request})
+        serializer_data = KejaUserSerializer(
+            data=request.data, context={'request': request})
         serializer_data.is_valid(raise_exception=True)
         serializer_data.save(owner=request.user)
         return Response(serializer_data.data, status=status.HTTP_201_CREATED)

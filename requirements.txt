@@ -4,11 +4,14 @@ attrs==21.4.0
 backcall==0.2.0
 bcrypt==3.2.0
 cffi==1.15.0
+coverage==6.3.2
 decorator==5.1.1
+distlib==0.3.4
 Django==4.0.4
 django-filter==21.1
 djangorestframework==3.13.1
 executing==0.8.3
+filelock==3.6.0
 flake8==4.0.1
 iniconfig==1.1.1
 ipython==8.2.0
@@ -21,6 +24,7 @@ parso==0.8.3
 pexpect==4.8.0
 phonenumbers==8.12.46
 pickleshare==0.7.5
+platformdirs==2.5.2
 pluggy==1.0.0
 prompt-toolkit==3.0.29
 psycopg2-binary==2.9.3
@@ -39,6 +43,9 @@ pytz==2022.1
 six==1.16.0
 sqlparse==0.4.2
 stack-data==0.2.0
+toml==0.10.2
 tomli==2.0.1
+tox==3.25.0
 traitlets==5.1.1
+virtualenv==20.14.1
 wcwidth==0.2.5

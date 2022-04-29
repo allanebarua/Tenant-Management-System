@@ -8,7 +8,7 @@ class KejaPasswordAuthentication(authentication.BasicAuthentication):
     """Allow for authentication using hashed passwords."""
 
     def authenticate_credentials(self, userid, password, request=None):
-        """Authenticate the userid and password against username and password."""
+        """Authenticate Using hashed password."""
         try:
             user = KejaUser.objects.get(username=userid)
         except KejaUser.DoesNotExist:
@@ -18,7 +18,8 @@ class KejaPasswordAuthentication(authentication.BasicAuthentication):
             raise exceptions.AuthenticationFailed('User is inactive or deleted.')
 
         try:
-            if not bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
+            if not bcrypt.checkpw(
+                    password.encode('utf-8'), user.password.encode('utf-8')):
                 raise exceptions.AuthenticationFailed('Invalid username/password.')
         except Exception:
             raise exceptions.AuthenticationFailed('Invalid username/password.')

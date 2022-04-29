@@ -27,7 +27,7 @@ def add_auth_credentials(client, username, password=None, auth_mode='PASSWORD'):
         client.credentials(HTTP_AUTHORIZATION=f'Basic {base64_credentials}')
 
     elif auth_mode == 'TOKEN':
-        token =Token.objects.get(user__username=username)
+        token = Token.objects.get(user__username=username)
         client.credentials(HTTP_AUTHORIZATION=f'Bearer {token.key}')
 
     return client
@@ -52,7 +52,8 @@ class KejaUserTests(APITestCase):
         }
 
         # Create Landlord
-        user_response = self.client.post(reverse('create-user'), user_data, format='json')
+        user_response = self.client.post(
+            reverse('create-user'), user_data, format='json')
         self.assertEqual(user_response.status_code, status.HTTP_201_CREATED)
 
         # Create Landlord's contact
@@ -63,14 +64,15 @@ class KejaUserTests(APITestCase):
             'contact_value': '0790830848',
             'is_active': True
         }
-        contact_response = self.client.post(reverse('create-contact'), contact_data, format='json')
+        contact_response = self.client.post(
+            reverse('create-contact'), contact_data, format='json')
         self.assertEqual(contact_response.status_code, status.HTTP_201_CREATED)
 
         # Get the created user data.
         # Landlords can only query data about themselves and their tenants.
         expected_data = [
             OrderedDict([
-                ('id', 2), # The admin account created earlier is id 1
+                ('id', 2),  # The admin account created earlier is id 1
                 ('username', 'Landlord1'),
                 ('first_name', ''),
                 ('last_name', ''),
@@ -108,12 +110,14 @@ class KejaUserClassBasedViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
         # Password authenticated request
-        self.client = add_auth_credentials(self.client, admin.username, '123', auth_mode='PASSWORD')
+        self.client = add_auth_credentials(
+            self.client, admin.username, '123', auth_mode='PASSWORD')
         response = self.client.get(reverse('list-users'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # Token authenticated request
-        self.client = add_auth_credentials(self.client, admin.username, auth_mode='TOKEN')
+        self.client = add_auth_credentials(
+            self.client, admin.username, auth_mode='TOKEN')
         expected_data = [
             OrderedDict([
                 ('id', admin.pk),
