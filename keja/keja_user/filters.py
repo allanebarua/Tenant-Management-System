@@ -1,6 +1,6 @@
 from django_filters import rest_framework as filters
 
-from keja_user.models import Contact, KejaUser
+from keja.keja_user.models import Contact, KejaUser
 
 
 class CharInFilter(filters.BaseInFilter, filters.CharFilter):

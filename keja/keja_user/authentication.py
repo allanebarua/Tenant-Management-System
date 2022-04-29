@@ -1,7 +1,7 @@
 import bcrypt
 from rest_framework import authentication, exceptions
 
-from keja_user.models import KejaUser
+from keja.keja_user.models import KejaUser
 
 
 class KejaPasswordAuthentication(authentication.BasicAuthentication):

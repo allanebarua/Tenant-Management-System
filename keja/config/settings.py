@@ -44,7 +44,7 @@ INSTALLED_APPS = [
 ]
 
 LOCAL_APPS = [
-    'keja_user.apps.KejaUserConfig',
+    'keja.keja_user.apps.KejaUserConfig',
 ]
 
 INSTALLED_APPS += LOCAL_APPS
@@ -59,7 +59,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'keja.urls'
+ROOT_URLCONF = 'keja.config.urls'
 
 TEMPLATES = [
     {
@@ -138,8 +138,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'keja_user.authentication.KejaPasswordAuthentication',
-        'keja_user.authentication.KejaTokenAuthentication',
+        'keja.keja_user.authentication.KejaPasswordAuthentication',
+        'keja.keja_user.authentication.KejaTokenAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [

@@ -9,7 +9,7 @@ from django.forms import ValidationError
 from django.utils import timezone
 from rest_framework.authtoken.models import Token
 
-from common.models import KejaBase
+from keja.common.models import KejaBase
 
 # User type options.
 LANDLORD = 'LANDLORD'

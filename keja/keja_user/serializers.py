@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from keja_user.models import ADMIN, LANDLORD, TENANT, Contact, KejaUser
+from keja.keja_user.models import ADMIN, LANDLORD, TENANT, Contact, KejaUser
 
 
 class ContactSerializer(serializers.ModelSerializer):

@@ -1,10 +1,10 @@
 from django.db.models import Q
 from rest_framework import exceptions, generics
 from rest_framework.response import Response
-from keja_user.filters import KejaUserFilter
+from keja.keja_user.filters import KejaUserFilter
 
-from keja_user.models import LANDLORD, TENANT, KejaUser
-from keja_user.serializers import KejaUserSerializer
+from keja.keja_user.models import LANDLORD, TENANT, KejaUser
+from keja.keja_user.serializers import KejaUserSerializer
 
 class KejaUserView(
         generics.ListCreateAPIView,

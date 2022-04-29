@@ -9,7 +9,7 @@ from rest_framework import HTTP_HEADER_ENCODING, status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
-from keja_user.models import ADMIN, LANDLORD, PHONE_CONTACT, KejaUser
+from keja.keja_user.models import ADMIN, LANDLORD, PHONE_CONTACT, KejaUser
 
 
 def create_db_user(user_type):
@@ -36,7 +36,7 @@ def add_auth_credentials(client, username, password=None, auth_mode='PASSWORD'):
 class KejaUserTests(APITestCase):
     """Test user management APIs."""
 
-    @patch('keja_user.models.timezone')
+    @patch('keja.keja_user.models.timezone')
     def test_create_landlord_and_contact(self, timezone_mock):
         """Test creation of a landlord user and his/her contact."""
         dt = timezone.now()
@@ -95,7 +95,7 @@ class KejaUserTests(APITestCase):
 
 
 class KejaUserClassBasedViewTests(APITestCase):
-    @patch('keja_user.models.timezone')
+    @patch('keja.keja_user.models.timezone')
     def test_token_based_authentication(self, timezone_mock):
         """Admin access to the API using token based authentication."""
         dt = timezone.now()

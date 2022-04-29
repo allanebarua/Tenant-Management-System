@@ -1,9 +1,9 @@
 from rest_framework.urls import path
 
-from keja_user import class_based_views, function_based_views, generic_views
+from keja.keja_user import function_based_views, generic_views, views
 
-KEJA_USER_VIEW = class_based_views.KejaUserView.as_view()
-CONTACT_VIEW = class_based_views.ContactView.as_view()
+KEJA_USER_VIEW = views.KejaUserView.as_view()
+CONTACT_VIEW = views.ContactView.as_view()
 GENERIC_USER_VIEW = generic_views.KejaUserView.as_view()
 
 # Function-Based Views

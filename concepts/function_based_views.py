@@ -5,11 +5,11 @@ from rest_framework.decorators import (
     api_view, authentication_classes, permission_classes)
 from rest_framework.response import Response
 
-from keja_user.authentication import KejaPasswordAuthentication
-from keja_user.filters import ContactFilter, KejaUserFilter
-from keja_user.models import LANDLORD, Contact, KejaUser
-from keja_user.serializers import ContactSerializer, KejaUserSerializer
-from keja_user.utils import get_db_object
+from keja.keja_user.authentication import KejaPasswordAuthentication
+from keja.keja_user.filters import ContactFilter, KejaUserFilter
+from keja.keja_user.models import LANDLORD, Contact, KejaUser
+from keja.keja_user.serializers import ContactSerializer, KejaUserSerializer
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 
 
@@ -64,7 +64,7 @@ def create_keja_user(request):
 @permission_classes([permissions.IsAuthenticated])
 def update_keja_user(request):
     """Update a single user."""
-    user = get_db_object(KejaUser, request.data['id'])
+    user = get_object_or_404(KejaUser, request.data['id'])
     # Non-Admin users can only update themselves.
     if not request.user.is_staff and user != request.user:
         raise exceptions.PermissionDenied(
@@ -83,7 +83,7 @@ def delete_keja_user(request, pk):
 
     Utilizes the default authentication policies in the settings.py file.
     """
-    user = get_db_object(KejaUser, pk)
+    user = get_object_or_404(KejaUser, pk)
     user.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -120,7 +120,7 @@ def create_user_contact(request):
 
 @api_view(['PATCH'])
 def update_user_contact(request):
-    contact = get_db_object(Contact, request.data['id'])
+    contact = get_object_or_404(Contact, request.data['id'])
     if contact.user != request.user:
         raise exceptions.PermissionDenied(
             f'User {request.user.id} cannot update contact {contact.id}')

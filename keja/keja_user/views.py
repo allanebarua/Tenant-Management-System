@@ -1,14 +1,14 @@
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from rest_framework import exceptions, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from keja_user.authentication import (
+from keja.keja_user.authentication import (
     KejaPasswordAuthentication, KejaTokenAuthentication)
-from keja_user.filters import ContactFilter, KejaUserFilter
-from keja_user.models import LANDLORD, Contact, KejaUser
-from keja_user.serializers import ContactSerializer, KejaUserSerializer
-from keja_user.utils import get_db_object
+from keja.keja_user.filters import ContactFilter, KejaUserFilter
+from keja.keja_user.models import LANDLORD, Contact, KejaUser
+from keja.keja_user.serializers import ContactSerializer, KejaUserSerializer
 
 
 class KejaAPIView(APIView):
@@ -59,7 +59,7 @@ class KejaUserView(KejaAPIView):
         return Response(serializer_data.data, status=status.HTTP_201_CREATED)
 
     def patch(self, request, *args, **kwargs):
-        user = get_db_object(KejaUser, request.data['id'])
+        user = get_object_or_404(KejaUser, request.data['id'])
         if not request.user.is_staff and user != request.user:
             raise exceptions.PermissionDenied(
                 f'user {request.user.id} cannot update user {user.id}')
@@ -70,7 +70,7 @@ class KejaUserView(KejaAPIView):
         return Response(serialized_data.data)
 
     def delete(self, request, *args, **kwargs):
-        user = get_db_object(KejaUser, kwargs['pk'])
+        user = get_object_or_404(KejaUser, kwargs['pk'])
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -105,7 +105,7 @@ class ContactView(KejaAPIView):
         return Response(validated_data.data, status=status.HTTP_201_CREATED)
 
     def patch(self, request, *args, **kwargs):
-        contact = get_db_object(Contact, request.data['id'])
+        contact = get_object_or_404(Contact, request.data['id'])
         if contact.user != request.user:
             raise exceptions.PermissionDenied(
                 f'User {request.user.id} cannot update contact {contact.id}')
