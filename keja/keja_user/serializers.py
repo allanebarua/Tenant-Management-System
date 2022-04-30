@@ -1,25 +1,34 @@
-from rest_framework import serializers
-
+"""Serializers for users and their contacts."""
 from keja.keja_user.models import ADMIN, LANDLORD, TENANT, Contact, KejaUser
+
+from rest_framework import serializers
 
 
 class ContactSerializer(serializers.ModelSerializer):
+    """Contacts serializer class."""
+
     owner = serializers.SlugRelatedField(slug_field='username', read_only=True)
 
     class Meta:
+        """Meta class."""
+
         model = Contact
         fields = ('owner', 'contact_type', 'contact_value', 'is_active')
 
     def create(self, validated_data):
+        """Create new contact from deserialized data."""
         return Contact.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
+        """Update existing contact using deserialized data."""
         instance.is_active = validated_data.get('is_active', instance.is_active)
         instance.save()
         return instance
 
 
 class KejaUserSerializer(serializers.ModelSerializer):
+    """KejaUser serializer class."""
+
     user_contacts = ContactSerializer(many=True, read_only=True)
     password = serializers.CharField(write_only=True)
     created = serializers.DateTimeField(read_only=True, format='%Y-%m-%d')
@@ -27,6 +36,8 @@ class KejaUserSerializer(serializers.ModelSerializer):
         slug_field='username', read_only=True, allow_null=True)
 
     class Meta:
+        """Meta class."""
+
         model = KejaUser
 
         fields = (
@@ -39,10 +50,8 @@ class KejaUserSerializer(serializers.ModelSerializer):
 
         self._validate_landlord_can_only_create_tenant_users(
             owner, validated_data['user_type'])
-
         self._validate_admin_cannot_create_tenant_users(
             owner, validated_data['user_type'])
-
         validated_data['landlord'] = (
             owner if validated_data['user_type'] == TENANT
             else None
@@ -60,24 +69,26 @@ class KejaUserSerializer(serializers.ModelSerializer):
         return instance
 
     def validate(self, data):
-        """Object-Level validations."""
-        # A landlord should have an email address.
+        """Perform Object-Level validations."""
         self._validate_landlord_has_email(data)
         return data
 
     def _validate_landlord_has_email(self, data):
+        """Validate that a landlord has an email address."""
         if data.get('user_type') == LANDLORD and not data.get('email'):
             raise serializers.ValidationError(
                 {'non_field_errors': 'A Landlord should have an email address.'}
             )
 
     def _validate_landlord_can_only_create_tenant_users(self, owner, create_user_type):
+        """Validate that a landlord can only create tenant accounts."""
         if owner.user_type == LANDLORD and create_user_type != TENANT:
             raise serializers.ValidationError(
                 {'non_field_errors': 'A Landlord can only create tenant user accounts.'}
             )
 
     def _validate_admin_cannot_create_tenant_users(self, owner, create_user_type):
+        """Validate that an admin cannot create tenant accounts."""
         if owner.user_type == ADMIN and create_user_type == TENANT:
             raise serializers.ValidationError(
                 {'non_field_errors': 'An Admin cannot create tenant user accounts.'}

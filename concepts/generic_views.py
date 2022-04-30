@@ -1,8 +1,9 @@
+"""Generic views for user and contacts management."""
 from django.db.models import Q
 from rest_framework import exceptions, generics
 from rest_framework.response import Response
-from keja.keja_user.filters import KejaUserFilter
 
+from keja.keja_user.filters import KejaUserFilter
 from keja.keja_user.models import LANDLORD, KejaUser
 from keja.keja_user.serializers import KejaUserSerializer
 
@@ -10,12 +11,14 @@ from keja.keja_user.serializers import KejaUserSerializer
 class KejaUserView(
         generics.ListCreateAPIView,
         generics.RetrieveUpdateDestroyAPIView):
+    """Generic view class supporting GET, POST and PATCH on users."""
 
     queryset = KejaUser.objects.all()
     serializer_class = KejaUserSerializer
     filter_class = KejaUserFilter
 
     def list(self, request, *args, **kwargs):
+        """List system users."""
         queryset = self.get_queryset()
 
         if request.user.is_staff:
@@ -32,12 +35,14 @@ class KejaUserView(
         return Response(serialized_users.data)
 
     def retrieve(self, request, *args, **kwargs):
+        """Retrieve a single user instance."""
         obj = self.get_object()
         self.check_object_permissions(request, obj)
         serializer = self.get_serializer(obj)
         return Response(serializer.data)
 
     def perform_create(self, serializer):
+        """Override creation of users to explicitly pass the creator."""
         serializer.save(owner=self.request.user)
 
     def update(self, request, *args, **kwargs):

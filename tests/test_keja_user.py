@@ -1,3 +1,4 @@
+"""Tests for user and contacts management utilities."""
 import base64
 from collections import OrderedDict
 from unittest.mock import patch
@@ -13,12 +14,14 @@ from keja.keja_user.models import ADMIN, LANDLORD, PHONE_CONTACT, KejaUser
 
 
 def create_db_user(user_type):
+    """Create a system user."""
     return baker.make(
         KejaUser, username='John', password='123', user_type=user_type,
     )
 
 
 def add_auth_credentials(client, username, password=None, auth_mode='PASSWORD'):
+    """Add authentication information to the client."""
     if auth_mode == 'PASSWORD':
         credentials = f'{username}:{password}'
         base64_credentials = base64.b64encode(
@@ -97,6 +100,8 @@ class KejaUserTests(APITestCase):
 
 
 class KejaUserClassBasedViewTests(APITestCase):
+    """Test token based authentication."""
+
     @patch('keja.keja_user.models.timezone')
     def test_token_based_authentication(self, timezone_mock):
         """Admin access to the API using token based authentication."""

@@ -1,3 +1,4 @@
+"""Class-Based views for user and contacts management."""
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import exceptions, permissions, status
@@ -15,6 +16,7 @@ class KejaAPIView(APIView):
     """Allow custom filtering of objects using django-filters."""
 
     def get_queryset(self, request):
+        """Return a queryset filtered using the specified filter class."""
         kwargs = {
             'data': request.query_params,
             'request': request,
@@ -30,7 +32,7 @@ class KejaAPIView(APIView):
 
 
 class KejaUserView(KejaAPIView):
-    """Class view for user management."""
+    """Class-Based view for user management."""
 
     authentication_classes = [KejaTokenAuthentication, KejaPasswordAuthentication]
     permission_classes = [permissions.IsAuthenticated]
@@ -38,6 +40,7 @@ class KejaUserView(KejaAPIView):
     filter_class = KejaUserFilter
 
     def get(self, request, *args, **kwargs):
+        """Handle GET HTTP requests for system users."""
         queryset = self.get_queryset(request)
 
         extras = Q(id=kwargs['pk']) if kwargs.get('pk') else Q()
@@ -53,6 +56,7 @@ class KejaUserView(KejaAPIView):
         return Response(serialized_users.data)
 
     def post(self, request, *args, **kwargs):
+        """Handle POST HTTP requests for system users."""
         serializer_data = KejaUserSerializer(
             data=request.data, context={'request': request})
         serializer_data.is_valid(raise_exception=True)
@@ -60,6 +64,7 @@ class KejaUserView(KejaAPIView):
         return Response(serializer_data.data, status=status.HTTP_201_CREATED)
 
     def patch(self, request, *args, **kwargs):
+        """Handle PATCH HTTP requests for system users."""
         user = get_object_or_404(KejaUser, request.data['id'])
         if not request.user.is_staff and user != request.user:
             raise exceptions.PermissionDenied(
@@ -71,17 +76,20 @@ class KejaUserView(KejaAPIView):
         return Response(serialized_data.data)
 
     def delete(self, request, *args, **kwargs):
+        """Handle DELETE HTTP requests for system users."""
         user = get_object_or_404(KejaUser, kwargs['pk'])
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ContactView(KejaAPIView):
-    """Class based view for contacts management."""
+    """Class-Based view for contacts management."""
+
     queryset = Contact.objects.all()
     filter_class = ContactFilter
 
     def get(self, request, *args, **kwargs):
+        """Handle GET HTTP requests for user contacts."""
         queryset = self.get_queryset(request)
 
         extras = Q(user__id=kwargs['pk']) if kwargs.get('pk') else Q()
@@ -100,12 +108,14 @@ class ContactView(KejaAPIView):
         return Response(serialized_contacts.data)
 
     def post(self, request, *args, **kwargs):
+        """Handle POST HTTP requests for user contacts."""
         validated_data = ContactSerializer(data=request.data)
         validated_data.is_valid(raise_exception=True)
         validated_data.save(owner=request.user)
         return Response(validated_data.data, status=status.HTTP_201_CREATED)
 
     def patch(self, request, *args, **kwargs):
+        """Handle PATCH HTTP requests for user contacts."""
         contact = get_object_or_404(Contact, request.data['id'])
         if contact.user != request.user:
             raise exceptions.PermissionDenied(

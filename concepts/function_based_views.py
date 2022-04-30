@@ -1,3 +1,4 @@
+"""Function-Based views for users and contacts management."""
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import exceptions, permissions, status
@@ -12,7 +13,7 @@ from keja.keja_user.serializers import ContactSerializer, KejaUserSerializer
 
 
 def get_queryset(request, manager, filter_class):
-    """Filter the default queryset using the `filter_class`"""
+    """Filter the default queryset using the `filter_class`."""
     kwargs = {
         'data': request.query_params,
         'request': request,
@@ -31,6 +32,7 @@ def get_queryset(request, manager, filter_class):
 @authentication_classes([KejaPasswordAuthentication])
 @permission_classes([permissions.IsAuthenticated])
 def list_keja_users(request, pk=None):
+    """List system users."""
     queryset = get_queryset(request, KejaUser.objects, KejaUserFilter)
     extras = Q(id=pk) if pk else Q()
 
@@ -46,11 +48,11 @@ def list_keja_users(request, pk=None):
     return Response(serialized_users.data)
 
 
-@api_view(['POST', 'GET'])
+@api_view(['POST'])
 @authentication_classes([KejaPasswordAuthentication])
 @permission_classes([permissions.IsAuthenticated])
 def create_keja_user(request):
-    """Create a user."""
+    """Create a new user."""
     serializer_data = KejaUserSerializer(data=request.data, context={'request': request})
     serializer_data.is_valid(raise_exception=True)
     serializer_data.save(owner=request.user)
@@ -77,10 +79,7 @@ def update_keja_user(request):
 @api_view(['DELETE'])
 @permission_classes([permissions.IsAuthenticated, permissions.IsAdminUser])
 def delete_keja_user(request, pk):
-    """Delete a user instance.
-
-    Utilizes the default authentication policies in the settings.py file.
-    """
+    """Delete a user instance."""
     user = get_object_or_404(KejaUser, pk)
     user.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
@@ -88,6 +87,7 @@ def delete_keja_user(request, pk):
 
 @api_view(['GET'])
 def get_user_contacts(request, pk=None):
+    """List user contacts."""
     queryset = get_queryset(request, Contact.objects, ContactFilter)
     extras = Q(user__id=pk) if pk else Q()
     # An admin can get all contacts
@@ -118,6 +118,7 @@ def create_user_contact(request):
 
 @api_view(['PATCH'])
 def update_user_contact(request):
+    """Update existing user contact."""
     contact = get_object_or_404(Contact, request.data['id'])
     if contact.user != request.user:
         raise exceptions.PermissionDenied(

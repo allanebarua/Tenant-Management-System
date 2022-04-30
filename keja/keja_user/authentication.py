@@ -1,7 +1,8 @@
+"""Project's customized authentication classes."""
 import bcrypt
-from rest_framework import authentication, exceptions
 
 from keja.keja_user.models import KejaUser
+from rest_framework import authentication, exceptions
 
 
 class KejaPasswordAuthentication(authentication.BasicAuthentication):

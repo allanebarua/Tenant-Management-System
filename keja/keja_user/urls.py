@@ -1,3 +1,4 @@
+"""Urls file for keja_user application."""
 from rest_framework.urls import path
 
 from keja.keja_user import views

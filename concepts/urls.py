@@ -1,3 +1,4 @@
+"""Url configs for Generic and function-based views."""
 from rest_framework.urls import path
 
 from keja.keja_user import function_based_views, generic_views, views
@@ -18,19 +19,6 @@ urlpatterns = [
         function_based_views.create_user_contact, name='create-contact'),
     path('list_contacts', function_based_views.get_user_contacts, name='list-contacts'),
 ]
-
-# Class-Based views (APIView)
-
-urlpatterns = [
-    path('', KEJA_USER_VIEW, name='list-users'),
-    path('<int:pk>', KEJA_USER_VIEW, name='list-user'),
-    path('create/', KEJA_USER_VIEW, name='create-user'),
-    path('update/', KEJA_USER_VIEW, name='update-user'),
-    path('delete/<int:pk>', KEJA_USER_VIEW, name='delete-user'),
-    path('create_contact/', CONTACT_VIEW, name='create-contact'),
-    path('list_contacts', CONTACT_VIEW, name='list-contacts'),
-]
-
 
 # Generic views (generics)
 urlpatterns = [

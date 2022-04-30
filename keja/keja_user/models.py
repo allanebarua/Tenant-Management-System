@@ -1,3 +1,4 @@
+"""Models for users and contacts."""
 import bcrypt
 import phonenumbers
 from django.contrib.auth.models import AbstractUser
@@ -40,6 +41,7 @@ class KejaUser(KejaBase, AbstractUser):
         'KejaUser', null=True, blank=True, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
+        """Save KejaUser instances."""
         if self.user_type in [LANDLORD, ADMIN]:
             self.landlord = None
 
@@ -57,6 +59,7 @@ class KejaUser(KejaBase, AbstractUser):
         super().save(*args, **kwargs)
 
     def set_password(self, raw_password):
+        """Hash user password."""
         self.password = bcrypt.hashpw(
             self.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         self._password = raw_password
@@ -64,6 +67,7 @@ class KejaUser(KejaBase, AbstractUser):
 
 class Contact(KejaBase):
     """Store for user contacts."""
+
     owner = models.ForeignKey(
         KejaUser, related_name='user_contacts', on_delete=models.CASCADE)
     contact_type = models.CharField(max_length=20, choices=CONTACT_TYPES)
@@ -71,15 +75,18 @@ class Contact(KejaBase):
     is_active = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
+        """Save Contact instances."""
         self.clean()
         super().save(*args, **kwargs)
 
     def clean(self, *args, **kwargs):
+        """Validate contact fields."""
         self.validate_phone_number()
         self.validate_email()
         super().clean(*args, **kwargs)
 
     def validate_phone_number(self):
+        """Validate phone numbers."""
         if self.contact_type != PHONE_CONTACT:
             return
 
@@ -92,6 +99,7 @@ class Contact(KejaBase):
             raise ValidationError({'format_phone_number': str(exc)})
 
     def validate_email(self):
+        """Validate email contacts."""
         if self.contact_type == EMAIL_CONTACT:
             validate_email(self.contact_value)
 

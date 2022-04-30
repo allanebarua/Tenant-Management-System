@@ -1,4 +1,6 @@
+"""Practise on serialization and deserialization."""
 from dateutil.parser import parse
+
 from rest_framework import serializers
 from rest_framework.renderers import JSONRenderer
 
@@ -11,6 +13,7 @@ def not_default_year_validator(dob):
 
 
 class Person:
+    """A person class."""
 
     def __init__(self, **kwargs):
         """Instantiate a Person."""
@@ -36,6 +39,8 @@ class Person:
 
 
 class PersonSerializer(serializers.Serializer):
+    """Person serializer."""
+
     name = serializers.CharField(max_length=256)
     dob = serializers.DateField(validators=[not_default_year_validator])
     gender = serializers.CharField()
