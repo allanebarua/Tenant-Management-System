@@ -77,7 +77,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'keja.wsgi.application'
+WSGI_APPLICATION = 'keja.config.wsgi.application'
 
 
 # Database

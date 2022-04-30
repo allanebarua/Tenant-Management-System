@@ -24,7 +24,7 @@ class KejaAPIView(APIView):
         }
         filterset = self.filter_class(**kwargs)
 
-        if not filterset.is_valid():
+        if not filterset.is_valid():  # pragma: no cover
             raise exceptions.APIException(
                 filterset.errors, code=status.HTTP_400_BAD_REQUEST)
 
@@ -65,7 +65,7 @@ class KejaUserView(KejaAPIView):
 
     def patch(self, request, *args, **kwargs):
         """Handle PATCH HTTP requests for system users."""
-        user = get_object_or_404(KejaUser, request.data['id'])
+        user = get_object_or_404(KejaUser, pk=request.data['id'])
         if not request.user.is_staff and user != request.user:
             raise exceptions.PermissionDenied(
                 f'user {request.user.id} cannot update user {user.id}')
@@ -77,7 +77,10 @@ class KejaUserView(KejaAPIView):
 
     def delete(self, request, *args, **kwargs):
         """Handle DELETE HTTP requests for system users."""
-        user = get_object_or_404(KejaUser, kwargs['pk'])
+        if not request.user.is_staff:
+            raise exceptions.PermissionDenied('Only Admins can delete users.')
+
+        user = get_object_or_404(KejaUser, pk=kwargs['pk'])
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -99,7 +102,7 @@ class ContactView(KejaAPIView):
 
         elif request.user.user_type == LANDLORD:
             queryset = queryset.filter(
-                extras, Q(owner=request.user) | Q(owner=request.user.landlord))
+                extras, Q(owner=request.user) | Q(owner__landlord=request.user))
 
         else:
             queryset = queryset.filter(extras, owner=request.user)
@@ -116,12 +119,12 @@ class ContactView(KejaAPIView):
 
     def patch(self, request, *args, **kwargs):
         """Handle PATCH HTTP requests for user contacts."""
-        contact = get_object_or_404(Contact, request.data['id'])
-        if contact.user != request.user:
+        contact = get_object_or_404(Contact, pk=request.data['id'])
+        if not request.user.is_staff and contact.owner != request.user:
             raise exceptions.PermissionDenied(
                 f'User {request.user.id} cannot update contact {contact.id}')
 
-        validated_data = ContactSerializer(data=request.data, partial=True)
+        validated_data = ContactSerializer(contact, data=request.data, partial=True)
         validated_data.is_valid(raise_exception=True)
         validated_data.save()
         return Response(validated_data.data)

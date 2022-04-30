@@ -31,7 +31,7 @@ class KejaUserFilter(filters.FilterSet):
 class ContactFilter(filters.FilterSet):
     """Contact Filter class."""
 
-    contact_type__in = CharInFilter(field_name='contact', lookup_expr='in')
+    contact_type__in = CharInFilter(field_name='contact_type', lookup_expr='in')
 
     class Meta:
         """Meta class for contact filters."""

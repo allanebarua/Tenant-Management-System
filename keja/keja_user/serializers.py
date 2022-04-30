@@ -1,6 +1,8 @@
 """Serializers for users and their contacts."""
-from keja.keja_user.models import ADMIN, LANDLORD, TENANT, Contact, KejaUser
-
+from django.core.validators import validate_email
+from keja.keja_user.models import (
+    ADMIN, EMAIL_CONTACT, LANDLORD, PHONE_CONTACT, TENANT, Contact,
+    KejaUser)
 from rest_framework import serializers
 
 
@@ -24,6 +26,17 @@ class ContactSerializer(serializers.ModelSerializer):
         instance.is_active = validated_data.get('is_active', instance.is_active)
         instance.save()
         return instance
+
+    def validate(self, data):
+        """Validate contact object."""
+        if data.get('contact_type') == PHONE_CONTACT:
+            data['contact_value'] = Contact.validate_phone_contact(
+                data['contact_value'])
+
+        if data.get('contact_type') == EMAIL_CONTACT:
+            validate_email(data['contact_value'])
+
+        return data
 
 
 class KejaUserSerializer(serializers.ModelSerializer):
@@ -76,20 +89,17 @@ class KejaUserSerializer(serializers.ModelSerializer):
     def _validate_landlord_has_email(self, data):
         """Validate that a landlord has an email address."""
         if data.get('user_type') == LANDLORD and not data.get('email'):
-            raise serializers.ValidationError(
-                {'non_field_errors': 'A Landlord should have an email address.'}
-            )
+            raise serializers.ValidationError({
+                'email': 'A Landlord should have an email address.'})
 
     def _validate_landlord_can_only_create_tenant_users(self, owner, create_user_type):
         """Validate that a landlord can only create tenant accounts."""
         if owner.user_type == LANDLORD and create_user_type != TENANT:
-            raise serializers.ValidationError(
-                {'non_field_errors': 'A Landlord can only create tenant user accounts.'}
-            )
+            raise serializers.ValidationError({
+                'non_field_errors': 'A Landlord can only create tenant user accounts.'})
 
     def _validate_admin_cannot_create_tenant_users(self, owner, create_user_type):
         """Validate that an admin cannot create tenant accounts."""
         if owner.user_type == ADMIN and create_user_type == TENANT:
-            raise serializers.ValidationError(
-                {'non_field_errors': 'An Admin cannot create tenant user accounts.'}
-            )
+            raise serializers.ValidationError({
+                'non_field_errors': 'An Admin cannot create tenant user accounts.'})

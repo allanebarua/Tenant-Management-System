@@ -81,27 +81,31 @@ class Contact(KejaBase):
 
     def clean(self, *args, **kwargs):
         """Validate contact fields."""
-        self.validate_phone_number()
+        self._validate_phone_number()
         self.validate_email()
         super().clean(*args, **kwargs)
 
-    def validate_phone_number(self):
+    def _validate_phone_number(self):
         """Validate phone numbers."""
-        if self.contact_type != PHONE_CONTACT:
-            return
-
-        try:
-            parsed_phone_no = phonenumbers.parse(self.contact_value, 'KE')
-            self.contact_value = phonenumbers.format_number(
-                parsed_phone_no, phonenumbers.PhoneNumberFormat.E164
-            )
-        except Exception as exc:
-            raise ValidationError({'format_phone_number': str(exc)})
+        if self.contact_type == PHONE_CONTACT:
+            self.contact_value = Contact.validate_phone_contact(
+                self.contact_value)
 
     def validate_email(self):
         """Validate email contacts."""
         if self.contact_type == EMAIL_CONTACT:
             validate_email(self.contact_value)
+
+    @classmethod
+    def validate_phone_contact(cls, phone_number):
+        """Validate phone contact."""
+        try:
+            parsed_phone_no = phonenumbers.parse(phone_number, 'KE')
+            return phonenumbers.format_number(
+                parsed_phone_no, phonenumbers.PhoneNumberFormat.E164
+            )
+        except Exception:
+            raise ValidationError('Invalid phone number supplied.')
 
 
 @receiver(post_save, sender=KejaUser)

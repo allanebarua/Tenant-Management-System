@@ -8,10 +8,11 @@ CONTACT_VIEW = views.ContactView.as_view()
 
 urlpatterns = [
     path('', KEJA_USER_VIEW, name='list-users'),
-    path('<int:pk>', KEJA_USER_VIEW, name='list-user'),
+    path('<int:pk>', KEJA_USER_VIEW, name='retrieve-user'),
     path('create/', KEJA_USER_VIEW, name='create-user'),
     path('update/', KEJA_USER_VIEW, name='update-user'),
     path('delete/<int:pk>', KEJA_USER_VIEW, name='delete-user'),
     path('create_contact/', CONTACT_VIEW, name='create-contact'),
-    path('list_contacts', CONTACT_VIEW, name='list-contacts'),
+    path('list_contacts/', CONTACT_VIEW, name='list-contacts'),
+    path('update_contact/', CONTACT_VIEW, name='update-contact'),
 ]
