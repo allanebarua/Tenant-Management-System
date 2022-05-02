@@ -1,9 +1,10 @@
 """Serializers for users and their contacts."""
 from django.core.validators import validate_email
-from keja.keja_user.models import (
-    ADMIN, EMAIL_CONTACT, LANDLORD, PHONE_CONTACT, TENANT, Contact,
-    KejaUser)
 from rest_framework import serializers
+
+from keja.keja_user.models import (
+    ADMIN, EMAIL_CONTACT, LANDLORD, PHONE_CONTACT, TENANT,
+    Contact, KejaUser)
 
 
 class ContactSerializer(serializers.ModelSerializer):

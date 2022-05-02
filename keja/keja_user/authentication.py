@@ -6,7 +6,7 @@ from rest_framework import authentication, exceptions
 
 
 class KejaPasswordAuthentication(authentication.BasicAuthentication):
-    """Allow for authentication using hashed passwords."""
+    """Authenticate Using hashed password."""
 
     def authenticate_credentials(self, userid, password, request=None):
         """Authenticate Using hashed password."""
