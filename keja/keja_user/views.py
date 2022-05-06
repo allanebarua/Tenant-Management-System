@@ -1,99 +1,101 @@
-"""Class-Based views for user and contacts management."""
+"""Viewsets for user and contacts management."""
 from django.db.models import Q
-from django.shortcuts import get_object_or_404
-from rest_framework import exceptions, permissions, status
+from rest_framework import exceptions, status
+from rest_framework.mixins import (
+    CreateModelMixin, ListModelMixin, RetrieveModelMixin, UpdateModelMixin)
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
-from keja.keja_user.authentication import (
-    KejaPasswordAuthentication, KejaTokenAuthentication)
 from keja.keja_user.filters import ContactFilter, KejaUserFilter
 from keja.keja_user.models import LANDLORD, Contact, KejaUser
 from keja.keja_user.serializers import ContactSerializer, KejaUserSerializer
 
 
-class KejaAPIView(APIView):
-    """Allow custom filtering of objects using django-filters."""
+class KejaUserViewSet(ModelViewSet):
+    """User management Viewset."""
 
-    def get_queryset(self, request):
-        """Return a queryset filtered using the specified filter class."""
-        kwargs = {
-            'data': request.query_params,
-            'request': request,
-            'queryset': self.queryset
-        }
-        filterset = self.filter_class(**kwargs)
-
-        if not filterset.is_valid():  # pragma: no cover
-            raise exceptions.APIException(
-                filterset.errors, code=status.HTTP_400_BAD_REQUEST)
-
-        return filterset.qs
-
-
-class KejaUserView(KejaAPIView):
-    """Class-Based view for user management."""
-
-    authentication_classes = [KejaTokenAuthentication, KejaPasswordAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
     queryset = KejaUser.objects.all()
+    serializer_class = KejaUserSerializer
     filter_class = KejaUserFilter
 
-    def get(self, request, *args, **kwargs):
-        """Handle GET HTTP requests for system users."""
-        queryset = self.get_queryset(request)
+    def list(self, request, *args, **kwargs):
+        """List system users."""
+        queryset = self.get_queryset()
 
-        extras = Q(id=kwargs['pk']) if kwargs.get('pk') else Q()
         if request.user.is_staff:
-            queryset = queryset.filter(extras)
+            pass
+
         elif request.user.user_type == LANDLORD:
             queryset = queryset.filter(
-                extras, Q(landlord=request.user) | Q(id=request.user.id))
-        else:
-            queryset = queryset.filter(extras, id=request.user.id)
+                Q(landlord=request.user) | Q(id=request.user.id))
 
-        serialized_users = KejaUserSerializer(queryset, many=True)
+        else:
+            queryset = KejaUser.objects.filter(id=request.user.id)
+
+        serialized_users = self.serializer_class(queryset, many=True)
         return Response(serialized_users.data)
 
-    def post(self, request, *args, **kwargs):
-        """Handle POST HTTP requests for system users."""
-        serializer_data = KejaUserSerializer(
-            data=request.data, context={'request': request})
-        serializer_data.is_valid(raise_exception=True)
-        serializer_data.save(owner=request.user)
-        return Response(serializer_data.data, status=status.HTTP_201_CREATED)
+    def update(self, request, *args, **kwargs):
+        """Update an existing database object.
 
-    def patch(self, request, *args, **kwargs):
-        """Handle PATCH HTTP requests for system users."""
-        user = get_object_or_404(KejaUser, pk=request.data['id'])
+        Can be used for both update and partial updates.
+        """
+        user = self.get_object()
         if not request.user.is_staff and user != request.user:
             raise exceptions.PermissionDenied(
                 f'user {request.user.id} cannot update user {user.id}')
 
-        serialized_data = KejaUserSerializer(user, data=request.data, partial=True)
-        serialized_data.is_valid(raise_exception=True)
-        serialized_data.save()
-        return Response(serialized_data.data)
+        partial = kwargs.pop('partial', False)
+        serializer = self.get_serializer(user, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
-    def delete(self, request, *args, **kwargs):
-        """Handle DELETE HTTP requests for system users."""
+    def destroy(self, request, *args, **kwargs):
+        """Delete a user."""
         if not request.user.is_staff:
-            raise exceptions.PermissionDenied('Only Admins can delete users.')
+            raise exceptions.PermissionDenied()
 
-        user = get_object_or_404(KejaUser, pk=kwargs['pk'])
+        user = self.get_object()
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    def perform_create(self, serializer):
+        """Override creation of users to explicitly pass the creator."""
+        serializer.save(owner=self.request.user)
 
-class ContactView(KejaAPIView):
-    """Class-Based view for contacts management."""
+    def check_object_permissions(self, request, obj):
+        """Check Whether the user is allowed to access the database object."""
+        permitted = (
+            request.user.is_staff
+            or request.user == obj
+            or request.user == obj.landlord
+        )
+
+        if not permitted:
+            raise exceptions.PermissionDenied(
+                f'user {request.user.id} cannot retrive user {obj.id}')
+
+    def get_queryset(self):
+        """Get filtered queryset."""
+        return self.filter_queryset(super().get_queryset())
+
+
+class ContactViewSet(
+        RetrieveModelMixin,
+        ListModelMixin,
+        CreateModelMixin,
+        UpdateModelMixin,
+        GenericViewSet):
+    """User management Viewset."""
 
     queryset = Contact.objects.all()
+    serializer_class = ContactSerializer
     filter_class = ContactFilter
 
-    def get(self, request, *args, **kwargs):
-        """Handle GET HTTP requests for user contacts."""
-        queryset = self.get_queryset(request)
+    def list(self, request, *args, **kwargs):
+        """Return a list of contacts."""
+        queryset = self.get_queryset()
 
         extras = Q(user__id=kwargs['pk']) if kwargs.get('pk') else Q()
 
@@ -110,21 +112,30 @@ class ContactView(KejaAPIView):
         serialized_contacts = ContactSerializer(queryset, many=True)
         return Response(serialized_contacts.data)
 
-    def post(self, request, *args, **kwargs):
-        """Handle POST HTTP requests for user contacts."""
-        validated_data = ContactSerializer(data=request.data)
-        validated_data.is_valid(raise_exception=True)
-        validated_data.save(owner=request.user)
-        return Response(validated_data.data, status=status.HTTP_201_CREATED)
-
-    def patch(self, request, *args, **kwargs):
-        """Handle PATCH HTTP requests for user contacts."""
-        contact = get_object_or_404(Contact, pk=request.data['id'])
-        if not request.user.is_staff and contact.owner != request.user:
-            raise exceptions.PermissionDenied(
-                f'User {request.user.id} cannot update contact {contact.id}')
-
-        validated_data = ContactSerializer(contact, data=request.data, partial=True)
+    def update(self, request, *args, **kwargs):
+        """Update a contact."""
+        contact = self.get_object()
+        partial = kwargs.pop('partial', False)
+        validated_data = self.serializer_class(
+            contact, data=request.data, partial=partial)
         validated_data.is_valid(raise_exception=True)
         validated_data.save()
         return Response(validated_data.data)
+
+    def perform_create(self, serializer):
+        """Create a contact."""
+        serializer.save(owner=self.request.user)
+
+    def get_queryset(self):
+        """Get filtered queryset."""
+        return self.filter_queryset(super().get_queryset())
+
+    def check_object_permissions(self, request, obj):
+        """Check Whether the user is allowed to access the database object."""
+        permitted = (
+            request.user.is_staff
+            or request.user == obj.owner
+        )
+
+        if not permitted:
+            raise exceptions.PermissionDenied()

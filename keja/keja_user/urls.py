@@ -1,18 +1,9 @@
-"""Urls file for keja_user application."""
-from rest_framework.urls import path
+"""Url configs."""
+from rest_framework.routers import SimpleRouter
 
-from keja.keja_user import views
+from keja.keja_user.views import ContactViewSet, KejaUserViewSet
 
-KEJA_USER_VIEW = views.KejaUserView.as_view()
-CONTACT_VIEW = views.ContactView.as_view()
-
-urlpatterns = [
-    path('', KEJA_USER_VIEW, name='list-users'),
-    path('<int:pk>', KEJA_USER_VIEW, name='retrieve-user'),
-    path('create/', KEJA_USER_VIEW, name='create-user'),
-    path('update/', KEJA_USER_VIEW, name='update-user'),
-    path('delete/<int:pk>', KEJA_USER_VIEW, name='delete-user'),
-    path('create_contact/', CONTACT_VIEW, name='create-contact'),
-    path('list_contacts/', CONTACT_VIEW, name='list-contacts'),
-    path('update_contact/', CONTACT_VIEW, name='update-contact'),
-]
+router = SimpleRouter()
+router.register(r'users', viewset=KejaUserViewSet, basename='user')
+router.register(r'contacts', viewset=ContactViewSet, basename='contact')
+urlpatterns = router.urls
